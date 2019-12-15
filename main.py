@@ -1,4 +1,6 @@
 import numpy as np
+from os import listdir
+from os.path import join
 
 
 def read_instance(filename):
@@ -6,9 +8,9 @@ def read_instance(filename):
         times = f.readline().split()
         costs = list()
         for i in range(len(times)):
-            costs.append(f.readline().split())
-        opt_path = f.readline().split()
-        opt_value = f.readline().split()
+            costs.append([int(v) for v in f.readline().split()])
+        opt_path = [int(v) for v in f.readline().split()]
+        opt_value = [int(v) for v in f.readline().split()]
     return times, costs, opt_path, opt_value
 
 
@@ -16,13 +18,16 @@ def save_results(filename, path, value):
     with open(filename + "_out", "w") as f:
         for p in path:
             f.write(str(p) + " ")
-        f.write(str(value), "\n")
+        f.write("\n" + str(value) + "\n")
 
 
 class Task:
-    def __init__(self, costs, times, ):
+    def __init__(self, costs, times, opt_path=None, opt_value=None):
         self.costs = costs
         self.times = times
+        self.opt_path = opt_path
+        self.opt_value = opt_value
+
         self.n = len(times)
         self.full = set(range(self.n))
 
@@ -96,14 +101,17 @@ def brunching_deep(leafs):
     return leafs[index]
 
 
-def brunch_and_bound(times, costs, brunching, upper_calc, lower_calc):
-    # step 1
-    V = set(range(len(times)))
-
-    # step 3
-    vertex = brunching(V)
+def brunch_and_bound(task, brunching, upper_calc, lower_calc):
+    return None, None
 
 
-l = [1, 2, 3]
-l2 = [3, 4, 5]
-print(l + l2)
+def main():
+    instances_folder = "instances"
+    for file in listdir(instances_folder):
+        if file[-4:] != ".txt":
+            continue
+        else:
+            task = Task(*read_instance(join(instances_folder, file)))
+            founded_path, founded_value = brunch_and_bound(task, brunching_deep, upper_bound, lower_bound)
+            if founded_path == task.opt_path and founded_value == task.opt_value:
+                save_results(file, founded_path, founded_value)
