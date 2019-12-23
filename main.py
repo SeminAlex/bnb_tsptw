@@ -120,23 +120,30 @@ def brunch_and_bound(task, brunching, upper_calc, lower_calc):
     # step 1
     candidats = set()
     V = set([Vertex([i]) for i in range(1, task.n)])
-
+    best_cost = None
+    best_path = None
     while True:
         # step 3
         v = brunching(V)
         beta_all = task.full - v.path_set
 
         # step 3
-        V.remove(v)
         if len(v.path) == task.n - 1:
             candidats.add(v)
+
             cost = task.cost_function(v.path)
             dist = task.distance(v.path)
+            if not best_cost or best_cost > cost:
+                best_path = v
+                best_cost = cost
+                best_dist = dist
             print("\t\t", v, " COST = ", cost, "  DIST = ", dist)
         for beta in beta_all:
             V.add(v + beta)
 
         # step 4
+        if len(beta_all) != 0:
+            V.remove(v)
         remove = set()
         for v1, v2 in product(V, V):
             if v1 == v2:
@@ -144,40 +151,34 @@ def brunch_and_bound(task, brunching, upper_calc, lower_calc):
             # print("BbB :: Check 1 :: ", v1, v2)
             # print("BbB :: Check 2 :: ", upper_calc(v1, task), lower_calc(v2, task))
             if v1 in V and v2 in V:
-                if upper_calc(v1, task) <= lower_calc(v2, task):
-                    # remove.add(v2)
-                    V.remove(v2)
+                lower = lower_calc(v2, task)
+                if upper_calc(v1, task) <= lower or (best_cost and best_cost < lower):
+                    if v2 in V:
+                        V.remove(v2)
+                        remove.add(v2)
+
         print("BnB Iteration : FOR REMOVE", remove)
-        for v in remove:
+        if v in V:
             V.remove(v)
+        # for v in remove:
+        #     V.remove(v)
 
         # step 2
         print("BnB Iteration : ", V, "\n\t\t SIZE = ", len(V))
 
-        if len(V) == 0:
+        if len(V) == 0 or len(V) == 1 :
             print("BnB: Last step", candidats)
-            cost = task.cost_function(v.path)
-            dist = task.distance(v.path)
+            cost = task.cost_function(best_path.path)
+            dist = task.distance(best_path.path)
             print("\t\t", v, " COST = ", cost, "  DIST = ", dist)
-            # for cand in candidats:
-            #     cost = task.cost_function(cand.path)
-            #     dist = task.distance(cand.path)
-            #     print("\t\t", cand, " COST = ", cost, "  DIST = ", dist)
-
-
-            # v = list(V)[-1]
-            # lower = lower_calc(v, task)
-            # upper = upper_calc(v, task)
-            # if lower == upper:
-            #     return v.path, None
             break
-    return None, None
+    return v, cost, dist
 
 
 def main():
     instances_folder = "instances"
     for file in listdir(instances_folder):
-        if file[-5:] != "3.txt":
+        if file[-5:] != "5.txt":
             continue
         else:
             task = Task(*read_instance(join(instances_folder, file)))
