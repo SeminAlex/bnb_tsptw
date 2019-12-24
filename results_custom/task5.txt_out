@@ -1,0 +1,4 @@
+1 4 5 2 3 7 6 10 8 9 
+Value = 4
+Complexity(original) = -7257566
+Complexity(custom) = 9.369488536155202e-06
